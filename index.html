@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego de Memorama</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(to right, #6a11cb, #2575fc);
+            transition: background 1s;
+        }
+        #game-board {
+            display: grid;
+            grid-template-columns: repeat(4, 80px);
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .card {
+            width: 80px;
+            height: 80px;
+            background-color: #ddd;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+            cursor: pointer;
+        }
+        #results {
+            margin-top: 20px;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+        }
+        #notification {
+            display: none;
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px;
+            margin-top: 20px;
+            border-radius: 10px;
+        }
+        #buttons {
+            margin-top: 20px;
+        }
+        button {
+            font-size: 16px;
+            padding: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<div id="results">
+    <p>Tiempo: <span id="time">0</span> segundos</p>
+    <p>Puntos: <span id="score">0</span></p>
+    <p>Errores: <span id="errors">0</span></p>
+    <p>Marcador de Récords: <span id="highscore">0</span></p>
+</div>
+
+<div id="game-board"></div>
+
+<div id="buttons">
+    <button onclick="startGame()">Empezar a jugar</button>
+</div>
+
+<div id="notification">
+    <p>¡Has ganado!</p>
+    <button onclick="resetGame()">Intentar de nuevo</button>
+</div>
+
+<script>
+    const cards = ['A', 'A', 'B', 'B', 'C', 'C', 'D', 'D', 'E', 'E', 'F', 'F', 'G', 'G', 'H', 'H'];
+    let shuffledCards = [];
+    let flippedCards = [];
+    let time = 0;
+    let score = 0;
+    let errors = 0;
+    let highscore = 0;
+    let gameInterval;
+    let gameWon = false;
+
+    function shuffle(array) {
+        return array.sort(() => Math.random() - 0.5);
+    }
+
+    function createBoard() {
+        const gameBoard = document.getElementById('game-board');
+        shuffledCards = shuffle(cards);
+
+        for (let i = 0; i < shuffledCards.length; i++) {
+            const card = document.createElement('div');
+            card.classList.add('card');
+            card.dataset.value = shuffledCards[i];
+            card.addEventListener('click', flipCard);
+            gameBoard.appendChild(card);
+        }
+    }
+
+    function startGame() {
+        gameWon = false;
+        time = 0;
+        score = 0;
+        errors = 0;
+        updateResults();
+        hideResults();
+        startTimer();
+
+        // Limpiar el contenido del tablero antes de crear uno nuevo
+        const gameBoard = document.getElementById('game-board');
+        gameBoard.innerHTML = '';
+
+        createBoard();
+    }
+
+    function startTimer() {
+        gameInterval = setInterval(() => {
+            time++;
+            updateResults();
+        }, 1000);
+    }
+
+    function flipCard() {
+        if (gameWon) return;
+
+        const card = this;
+        card.innerHTML = card.dataset.value;
+        card.classList.add('flipped');
+        flippedCards.push(card);
+
+        if (flippedCards.length === 2) {
+            setTimeout(checkMatch, 500);
+        }
+    }
+
+    function checkMatch() {
+        const [card1, card2] = flippedCards;
+        if (card1.dataset.value === card2.dataset.value) {
+            score++;
+        } else {
+            errors++;
+            card1.innerHTML = '';
+            card2.innerHTML = '';
+            card1.classList.remove('flipped');
+            card2.classList.remove('flipped');
+        }
+
+        flippedCards = [];
+
+        if (score === cards.length / 2) {
+            gameWon = true;
+            showNotification();
+            clearInterval(gameInterval);
+            updateHighscore();
+        }
+
+        updateResults();
+    }
+
+    function updateResults() {
+        document.getElementById('time').innerText = time;
+        document.getElementById('score').innerText = score;
+        document.getElementById('errors').innerText = errors;
+    }
+
+    function updateHighscore() {
+        if (score > highscore) {
+            highscore = score;
+            document.getElementById('highscore').innerText = highscore;
+        }
+    }
+
+    function showNotification() {
+        const notification = document.getElementById('notification');
+        notification.style.display = 'block';
+    }
+
+    function hideResults() {
+        const results = document.getElementById('results');
+        results.style.display = 'block';
+    }
+
+    function resetGame() {
+        const gameBoard = document.getElementById('game-board');
+        const notification = document.getElementById('notification');
+        
+        // Limpiar el contenido del tablero
+        gameBoard.innerHTML = '';
+
+        // Restablecer las variables y ocultar la notificación
+        clearInterval(gameInterval);
+        hideResults();
+        hideNotification();
+
+        // Reiniciar el juego
+        startGame();
+    }
+
+    function hideNotification() {
+        const notification = document.getElementById('notification');
+        notification.style.display = 'none';
+    }
+</script>
+
+<script>
+    // Cambio automático de color de fondo
+    const colors = ['#6a11cb', '#2575fc', '#34e89e', '#e317fd', '#FF6347'];
+    let colorIndex = 0;
+
+    function changeBackgroundColor() {
+        document.body.style.background = `linear-gradient(to right, ${colors[colorIndex]}, ${colors[(colorIndex + 1) % colors.length]})`;
+        colorIndex = (colorIndex + 1) % colors.length;
+    }
+
+    setInterval(changeBackgroundColor, 5000);  // Cambia cada 5 segundos
+</script>
+
+</body>
+</html>

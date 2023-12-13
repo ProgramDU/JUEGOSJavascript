@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Juego de Adivinanza de Animales</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 50px;
+      background-color: #f3f3f3;
+      background-image: url('images}/preg.png'); /* Cambia la ruta a la imagen de fondo */
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      padding: 20px;
+    }
+
+    h1 {
+      color: #333;
+    }
+
+    p, ul, input, button {
+      color: #333;
+      background-color: rgba(228, 224, 224, 0.7); /* Fondo transparente */
+      border: 2px solid #f0f0f0;
+      border-radius: 5px;
+      padding: 10px;
+      margin: 10px;
+    }
+
+    #hint {
+      color: #007bff;
+    }
+
+    #guessInput {
+      color: #333;
+    }
+
+    button {
+      cursor: pointer;
+      transition: background-color 0.3s ease; /* Efecto de transición al cambiar de color */
+    }
+
+    button:hover {
+      background-color: #60328b;
+    }
+
+    #message {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Juego de Adivinanza de Animales</h1>
+  <p>Estoy pensando en un animal. ¿Puedes adivinar cuál es?</p>
+  <p id="hint"></p>
+  <input type="text" id="guessInput">
+  <button onclick="checkGuess()">Adivinar</button>
+  <p id="message"></p>
+  <button onclick="resetGame()">Volver a Jugar</button>
+
+  <script>
+    let animals = [
+      { name: 'perro', sound: 'ladrido' },
+      { name: 'gato', sound: 'miau' },
+      { name: 'elefante', sound: 'barrito' },
+      { name: 'león', sound: 'rugido' },
+      { name: 'vaca', sound: 'muuh' },
+      { name: 'jirafa', sound: 'rugido suave' },
+      { name: 'mono', sound: 'gruñido' },
+      { name: 'koala', sound: 'gemido' },
+      { name: 'borrego', sound: 'beee' },
+      { name: 'delfín', sound: 'chirrido' }
+    ];
+
+    let targetAnimal;
+    let attempts = 0;
+    const maxAttempts = 3;
+
+    function startNewGame() {
+      targetAnimal = animals[Math.floor(Math.random() * animals.length)];
+      attempts = 0;
+      document.getElementById('message').innerHTML = '';
+      document.getElementById('hint').innerHTML = `Pista: Es un mamífero. Hace el sonido "${targetAnimal.sound}".`;
+      document.getElementById('guessInput').value = '';
+      document.getElementById('guessInput').disabled = false;
+      document.querySelector('button').disabled = false;
+    }
+
+    function checkGuess() {
+      const guessInput = document.getElementById('guessInput');
+      const guess = guessInput.value.toLowerCase();
+
+      if (guess === targetAnimal.name) {
+        document.getElementById('message').innerHTML = `¡Correcto! Has adivinado el animal en ${attempts + 1} intentos.`;
+        document.getElementById('message').style.color = 'green';
+        disableInputAndButton();
+      } else {
+        attempts++;
+        if (attempts === maxAttempts) {
+          document.getElementById('message').innerHTML = `¡Perdiste! El animal correcto era ${targetAnimal.name}.`;
+          document.getElementById('message').style.color = 'red';
+          disableInputAndButton();
+        } else {
+          document.getElementById('message').innerHTML = `Incorrecto(Tienes 3 intentos). Intento Numero:  ${attempts + 1}.`;
+          document.getElementById('message').style.color = 'red';
+        }
+      }
+    }
+
+    function resetGame() {
+      startNewGame();
+    }
+
+    function disableInputAndButton() {
+      document.getElementById('guessInput').disabled = true;
+      document.querySelector('button').disabled = true;
+    }
+
+    window.onload = startNewGame;
+  </script>
+
+</body>
+</html>

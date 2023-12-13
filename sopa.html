@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Juego de Sopa de Letras</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+      background-image: url('images}/letra.jpeg'); /* Cambia la ruta a tu imagen de fondo */
+      background-size: cover;
+    }
+
+    #container {
+      background-color: rgba(255, 255, 255, 0.7); /* Fondo semitransparente para mejor visibilidad */
+      padding: 20px;
+    }
+
+    #puzzle-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    #letter-box {
+      border: 2px solid #000;
+      display: grid;
+      gap: 5px;
+      grid-template-columns: repeat(5, 40px);
+      grid-template-rows: repeat(5, 40px);
+      justify-content: center;
+      margin-top: 20px;
+      background-color: #fff;
+      padding: 10px;
+      border-radius: 10px;
+    }
+
+    .cell {
+      width: 40px;
+      height: 40px;
+      text-align: center;
+      line-height: 40px;
+      border: 1px solid #000;
+      background-color: #fff;
+      user-select: none;
+      cursor: pointer;
+    }
+
+    .selected {
+      background-color: #aaffaa;
+    }
+
+    .found {
+      text-decoration: underline;
+    }
+
+    .checkmark {
+      color: green;
+      font-size: 18px;
+      margin-left: 5px;
+    }
+
+    #word-list {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+
+    #result-message {
+      margin-top: 20px;
+      font-weight: bold;
+      color: green;
+    }
+
+    #new-puzzle-button {
+      padding: 10px;
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<div id="container">
+  <h1 style="color: #333;">Juego de Sopa de Letras</h1>
+  <div id="puzzle-container">
+    <div id="letter-box"></div>
+    <div id="word-list"></div>
+    <div id="result-message"></div>
+  </div>
+  <button id="new-puzzle-button" onclick="loadRandomPuzzle()">Nueva Sopa</button>
+</div>
+
+<script>
+  const puzzles = [
+    {
+      words: ['Gato', 'Perro', 'Oso', 'Vaca'],
+      grid: [
+        ['V', 'A', 'C', 'A', 'O'],
+        ['W', 'O', 'R', 'L', 'S'],
+        ['J', 'A', 'V', 'A', 'O'],
+        ['C', 'G', 'A', 'T', 'O'],
+        ['P', 'E', 'R', 'R', 'O']
+      ]
+    },
+    {
+      words: ['HTML', 'JAVA', 'CSS', 'USER'],
+      grid: [
+        ['C', 'S', 'S', 'I', 'U'],
+        ['J', 'A', 'V', 'A', 'S'],
+        ['S', 'C', 'R', 'I', 'E'],
+        ['T', 'G', 'I', 'T', 'R'],
+        ['U', 'H', 'T', 'M', 'L']
+      ]
+    },
+    {
+      words: ['Rosa', 'Azul', 'Negro', 'Rosa'],
+      grid: [
+        ['R', 'O', 'S', 'A', 'N'],
+        ['A', 'Z', 'U', 'L', 'E'],
+        ['P', 'A', 'R', 'A', 'G'],
+        ['R', 'O', 'S', 'A', 'R'],
+        ['A', 'O', 'O', 'N', 'O']
+      ]
+    }
+  ];
+
+  let currentPuzzle;
+  let selectedCells = [];
+  let selectedWords = [];
+
+  function drawPuzzle() {
+    const letterBox = document.getElementById('letter-box');
+    letterBox.innerHTML = '';
+
+    for (let i = 0; i < currentPuzzle.grid.length; i++) {
+      for (let j = 0; j < currentPuzzle.grid[i].length; j++) {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.textContent = currentPuzzle.grid[i][j];
+        cell.dataset.row = i;
+        cell.dataset.col = j;
+        cell.addEventListener('mousedown', startSelection);
+        letterBox.appendChild(cell);
+      }
+    }
+  }
+
+  function loadRandomPuzzle() {
+    selectedCells = [];
+    selectedWords = [];
+    const randomIndex = Math.floor(Math.random() * puzzles.length);
+    currentPuzzle = puzzles[randomIndex];
+    
+    // Rellenar la sopa de letras con letras adicionales
+    for (let i = 0; i < 5; i++) {
+      for (let j = 0; j < 5; j++) {
+        if (!currentPuzzle.grid[i] || currentPuzzle.grid[i][j] === undefined) {
+          currentPuzzle.grid[i][j] = getRandomLetter();
+        }
+      }
+    }
+
+    drawPuzzle();
+    displayWordList();
+    document.getElementById('result-message').textContent = '';
+  }
+
+  function getRandomLetter() {
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    return alphabet[Math.floor(Math.random() * alphabet.length)];
+  }
+
+  function displayWordList() {
+    const wordListContainer = document.getElementById('word-list');
+    wordListContainer.innerHTML = 'Palabras a encontrar: ';
+
+    currentPuzzle.words.forEach((word, index) => {
+      const wordElement = document.createElement('span');
+      wordElement.textContent = word;
+
+      if (selectedWords.includes(word.toUpperCase())) {
+        wordElement.classList.add('found');
+        const checkmark = document.createElement('span');
+        checkmark.textContent = '✔';
+        checkmark.classList.add('checkmark');
+        wordElement.appendChild(checkmark);
+      }
+
+      if (index < currentPuzzle.words.length - 1) {
+        wordElement.innerHTML += ', ';
+      }
+
+      wordElement.addEventListener('click', () => onWordClick(word));
+      wordListContainer.appendChild(wordElement);
+    });
+  }
+
+  function onWordClick(word) {
+    if (!selectedWords.includes(word.toUpperCase())) {
+      alert(`¡Encontraste la palabra: ${word}!`);
+      selectedWords.push(word.toUpperCase());
+      displayWordList();
+      checkGameResult();
+    }
+  }
+
+  function startSelection(event) {
+    clearSelection();
+    const cell = event.target;
+    cell.classList.add('selected');
+    selectedCells.push({ row: cell.dataset.row, col: cell.dataset.col });
+    document.addEventListener('mousemove', continueSelection);
+    document.addEventListener('mouseup', endSelection);
+  }
+
+  function continueSelection(event) {
+    const cell = document.elementFromPoint(event.clientX, event.clientY);
+    if (cell && cell.classList.contains('cell') && !cell.classList.contains('selected')) {
+      const lastSelected = selectedCells[selectedCells.length - 1];
+      const currentCell = { row: cell.dataset.row, col: cell.dataset.col };
+
+      if (isValidSelection(lastSelected, currentCell)) {
+        cell.classList.add('selected');
+        selectedCells.push(currentCell);
+      }
+    }
+  }
+
+  function endSelection() {
+    document.removeEventListener('mousemove', continueSelection);
+    document.removeEventListener('mouseup', endSelection);
+
+    const selectedWord = getSelectedWord();
+    if (selectedWord) {
+      alert(`¡Encontraste la palabra: ${selectedWord}!`);
+      selectedWords.push(selectedWord.toUpperCase());
+      clearSelection();
+      displayWordList();
+      checkGameResult();
+    }
+  }
+
+  function isValidSelection(startCell, endCell) {
+    const dx = Math.abs(endCell.col - startCell.col);
+    const dy = Math.abs(endCell.row - startCell.row);
+
+    // Verificar si la selección es horizontal, vertical o diagonal
+    return (dx === 0 || dy === 0 || dx === dy) && dx <= 5 && dy <= 5;
+  }
+
+  function getSelectedWord() {
+    const word = selectedCells.map(cell => currentPuzzle.grid[cell.row][cell.col]).join('');
+    return currentPuzzle.words.find(w => w.toUpperCase() === word);
+  }
+
+  function clearSelection() {
+    selectedCells.forEach(cell => {
+      const selectedCell = document.querySelector(`.cell[data-row="${cell.row}"][data-col="${cell.col}"]`);
+      selectedCell.classList.remove('selected');
+    });
+    selectedCells = [];
+  }
+
+  function checkGameResult() {
+    const allWordsFound = currentPuzzle.words.every(word => selectedWords.includes(word.toUpperCase()));
+    if (allWordsFound) {
+      document.getElementById('result-message').textContent = '¡Has ganado!';
+    }
+  }
+
+  // Cargar una sopa de letras al inicio
+  loadRandomPuzzle();
+</script>
+
+</body>
+</html>
